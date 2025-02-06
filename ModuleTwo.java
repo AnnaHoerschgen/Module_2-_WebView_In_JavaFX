@@ -6,65 +6,76 @@
  */
 
 // Imports
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
-import javafx.scene.web.WebView;
-import javafx.stage.Stage;
+import java.net.URL;
+import java.util.Observable;
 
-public class ModuleTwo extends Application {
+public class ModuleTwo implements Initializable {
+    @FXML
+    private WebView webView;
 
-    // Create the WebView and TextField (address bar)
-    WebView webView;
-    TextField addressBar;
+    @FXML
+    private TextField textField;
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+    private WebEngine engine;
+    private WebHistory history;
+
+    private String homePage;
+
+    private double webZoom;
 
     @Override
-    public void start(Stage primaryStage) {
-        // Initialize WebView
-        webView = new WebView();
-
-        // Create an address bar for URL input
-        addressBar = new TextField();
-        addressBar.setPromptText("Enter URL...");
-
-        // Create a button to load the page
-        Button goButton = new Button("Go");
-        goButton.setOnAction(e -> loadPage());
-
-        // Create a layout (HBox) for the address bar and the Go button
-        HBox hBox = new HBox(10, addressBar, goButton);
-
-        // Create the main layout with WebView and the controls
-        HBox mainLayout = new HBox(10, hBox, webView);
-
-        // Set up the scene
-        Scene scene = new Scene(mainLayout, 800, 600);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Simple Web Browser");
-        primaryStage.show();
+    public void initialize(URL arg0, ResourceBundle arg1) {
+        engine = webView.getEngine();
+        homePage = "www.google.com";
+        textField.setText(homePage);
+        webZoom = 1;
+        loadPage();
     }
 
-    // Method to load the webpage
-    private void loadPage() {
-        String url = addressBar.getText();
-        if (!url.isEmpty()) {
-            // Prepend "http://" if the user doesn't include it
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                url = "http://" + url;
-            }
-            webView.getEngine().load(url);
+    public void loadPage() {
+        engine.load("http://"+textField.getText());
+    }
+
+    public void refreshPage() {
+        
+        engine.reload();
+    }
+
+    public void zoomIn() {
+        webZoom += 0.25;
+        webView.setZoom(webZoom);
+    }
+
+    public void zoomOut() {
+        webZoom -= 0.25;
+        webView.setZoom(webZoom);
+    }
+
+    public void displayHistory() {
+        history = engine.getHistory;
+        ObservableList<WebHistory.Entry> entries = history.getEntries();
+
+        for (WebHistory.Entry entry : entries) {
+            // System.out.println(entry);
+            System.out.println(entry.getUrl()+" "+entry.getLastVisitedDate());
         }
     }
 
-    Button backButton = new Button("Back");
-    backButton.setOnAction(e -> webView.getEngine().executeScript("history.back()"));
+    public void back() {
+        history = engine.getHistory();
+        ObservableList<WebHistory.Entry> entries = history.getEntries();
+        history.go(-1);
+        textField.setText(entries.get(history.getCurrentIndex));
+    }
 
-    Button forwardButton = new Button("Forward");
-    forwardButton.setOnAction(e -> webView.getEngine().executeScript("history.forward()"));
+    public void forward() {
+        history = engine.getHistory();
+        ObservableList<WebHistory.Entry> entries = history.getEntries();
+        history.go(1);
+        textField.setText(entries.get(history.getCurrentIndex));
+    }
+
+    public void executeJS() {
+        engine.executeScript("window.location = \"https://youtube.com\";");
+    }
 }
